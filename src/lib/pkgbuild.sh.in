@@ -321,13 +321,15 @@ install_package() {
 	while true; do
 		echo
 		msg "$(_gettext "Continue installing %s ?" "$pkgbase") $(yes_no 1)"
-		prompt $(gettext '[v]iew package contents   [c]heck package with namcap')
-		local answer=$(builduserinput "YNVC" "Y")
+		prompt $(gettext '[s]can with clamscan   [v]iew package contents   [c]heck package with namcap') # JACK CUSTOM EDIT HERE
+		local answer=$(builduserinput "YNVCS" "Y") # JACK CUSTOM EDIT HERE
 		echo
 		case "$answer" in
 			V)	local i=0
-				for _file in "$YPKGDEST"/!(*.sig); do
-					(( i++ )) && { prompt2 $(gettext 'Press any key to continue'); read -n 1; }
+				echo "$YPKGDEST"/!(*.sig)
+				msg $(gettext "$YPKGDEST"/!(*.sig))
+				for _file in "$YPKGDEST"/!(*.sig)
+					do (( i++ )) && { prompt2 $(gettext 'Press any key to continue'); read -n 1; }
 					$PACMAN -Qlp "$_file"
 				done
 				;;
@@ -340,6 +342,14 @@ install_package() {
 				fi
 				echo
 				;;
+			# JACK CUSTOM EDITS START
+			S)
+				if command -v "clamscan" &> /dev/null 2>&1; then
+						clamscan -r -a -z --detect-broken --no-summary --stdout $($PACMAN -Qlp $(msg $(gettext $YPKGDEST/!(*.sig))))
+				else warning $(gettext 'clamscan is missing from path, is clamav installed?')
+				fi
+				;;
+			# JACK CUSTOM EDITS END
 			Y)	break;;
 			*)	failed=1; break;;
 		esac
